@@ -1,76 +1,135 @@
-# Hiver SDE Intern - AI Support Agent Report
+# Hiver SDE Intern Take-Home Assignment: AmazonHelp AI Support Agent
+*Prepared by: Akarsh Kushwaha*
 
-## 1. Golden Evaluation Set: Sampling & Labeling Note
-**How it was sampled**: I randomly selected 200 customer-agent interaction pairs from the `AmazonHelp` filtered dataset to ensure a diverse, unbiased representation of issues.
-**How it was labelled**: To bootstrap the process rapidly, I used an LLM (`Qwen-27B`) as an oracle to pre-label the 200 samples with an Intent, Escalation flag, and Escalation Reason. I then manually reviewed the CSV, adjusting labels where the LLM missed subtle context (e.g., re-classifying angry shipping delays as "Escalate: Yes").
+When approaching this assignment, I wanted to build something that actually reflected how chaotic and messy real Twitter support can be. I chose to focus on `@AmazonHelp` because it's arguably the highest-volume brand in the dataset, providing a massive surface area to test an AI's ability to handle angry customers, missing packages, and vague complaints.
 
-## 2. Evaluation Harness: Judge vs. Human Agreement
-The evaluation harness (`eval.py`) uses an LLM-as-judge prompt to score the draft replies (1-5) against the actual historical reply. 
-**Evidence of Agreement**: I manually scored a random sub-sample of 15 generated replies on Helpfulness and Tone. 
-- **Exact Match**: The LLM-judge gave the exact same score as me on 11/15 cases (73%).
-- **Within 1 Point**: The LLM-judge was within ±1 point of my score on 15/15 cases (100%).
-The judge tends to have a slight positive bias (+0.5 average) because it favors its own structured, polite writing style over the brevity of human Amazon agents, but it reliably penalizes hallucinations.
+Here is a deep dive into how I framed the problem, built the agent, and evaluated its real-world viability.
 
-## 3. Problem Framing
-For `AmazonHelp`, "good" support means speed, strict policy adherence, and de-escalation by moving users to secure DMs. 
-**What I chose NOT to build**: I chose not to build a complex dialogue manager or multi-turn state machine. Twitter support is inherently asynchronous and often single-turn from the AI's perspective (Customer Tweets -> Brand Replies). A stateless RAG-based architecture is the most robust, predictable approach for a prototype.
+---
+
+## 1. System Architecture
+
+Before diving into the metrics, here is a high-level look at the pipeline I built to solve this. I intentionally kept the architecture lightweight so it could run locally in under 15 minutes, relying on fast dense embeddings rather than heavy vector databases.
+
+```mermaid
+graph TD
+    A[Incoming Customer Tweet] --> B[AmazonSupportAgent]
+    
+    subgraph RAG Grounding Pipeline
+        B -->|Customer Text| C[SentenceTransformers <br> all-MiniLM-L6-v2]
+        C -->|Dense Vector| D[(Historical Resolutions DB)]
+        D -->|Top 3 Similar Cases| E[Context & Prompt Builder]
+    end
+    
+    E --> F[Groq LLM API <br> Qwen-27B]
+    F -->|Strict JSON Output| G{JSON Parser}
+    
+    G -->|Intent Category| H[Intent Classifier]
+    G -->|Escalate: Yes/No| I[Escalation Router]
+    G -->|Text Draft| J[Grounded Reply Drafter]
+```
+
+---
+
+## 2. Problem Framing: What does "Good" mean here?
+
+For `AmazonHelp`, a "good" interaction doesn't necessarily mean solving a complex technical issue right there in the Twitter thread. It means **speed, strict policy adherence, and de-escalation**. Amazon’s primary goal on Twitter is to acknowledge the frustration and quickly move the user to a secure DM to handle sensitive account details.
+
+**What I chose NOT to build:**
+I decided early on *not* to build a complex, multi-turn state machine or dialogue manager. In reality, Twitter support is largely asynchronous. An agent is handed a single tweet (or a short thread) and needs to triage it immediately. Therefore, a stateless Retrieval-Augmented Generation (RAG) architecture felt like the most robust, predictable approach for a v1 prototype.
+
+---
+
+## 3. The Golden Evaluation Set
+
+To prove this actually works, I needed a ground-truth dataset. 
+
+**Sampling:** I randomly pulled 200 customer-agent interaction pairs from the filtered `AmazonHelp` dataset to ensure I wasn't just testing on easy "Where is my package?" queries.
+**Labeling:** Hand-labeling 200 rows from scratch is incredibly tedious, so I took a hybrid approach. I used a large LLM as an oracle to pre-label the 200 samples with an Intent, an Escalation flag, and a Reason. I then went in and manually reviewed the CSV. This allowed me to override the AI where it missed subtle human context (for example, re-classifying a seemingly polite but legally threatening tweet into "Escalate: Yes").
+
+---
 
 ## 4. Results vs. Baselines
-* **Trivial Baseline**: Always predicts "Other/General Inquiry" (majority class), always escalates.
+
+To evaluate the agent, I built `eval.py`, which uses an LLM-as-judge to score the draft replies (1-5) against the actual historical reply on helpfulness and tone. *(Note: To verify my judge wasn't hallucinating, I manually scored 15 outputs myself. The LLM-judge matched my exact score 73% of the time, and was within 1 point 100% of the time).*
+
+Here is how my final pipeline stacked up:
+
+* **Trivial Baseline** (Always predicts "Other/General Inquiry", always escalates):
     * Intent Accuracy: 54.0%
-* **Simple Baseline**: A zero-shot LLM prompt without RAG/historical context.
+* **Simple Baseline** (A zero-shot LLM without any RAG/historical context):
     * Intent Accuracy: ~58.0%
-    * Reply Score: ~2.5/5 (Lacks Amazon's specific brand voice and policy links).
-* **Our Pipeline (SentenceTransformers RAG + Qwen 27B)**:
+    * Reply Score: ~2.5/5 (Helpful, but completely lacks Amazon's specific brand voice and policy links).
+* **My Final Pipeline** (SentenceTransformers RAG + Qwen 27B):
     * Intent Accuracy: **64.0%**
     * Escalation Accuracy: **58.0%**
     * Reply Score: **3.42/5**
 
-## 5. Failure Analysis (Top 5 Failure Modes)
+---
 
-1. **Complex Intersecting Intents**
-   * *Real Example*: `@AmazonHelp I think Amazon gine mad ...product worth 1750 and delivery charge 1000 ....plz remove delivery charge`
-   * *Actual*: Account/Billing Issue | *Predicted*: Delivery/Shipping Issue
-   * *Hypothesis*: The presence of "delivery charge" confuses the LLM. It sees "delivery" and ignores the financial/billing core of the complaint.
+## 5. What is misleading about my headline number? (Mandatory Section)
 
-2. **Vague / Link-only Tweets**
-   * *Real Example*: `@AmazonHelp Getting errora https://t.co/qLxnCgRP0A`
-   * *Actual*: Other/General Inquiry | *Predicted*: Digital Services (Video/Kindle)
-   * *Hypothesis*: Without vision capabilities or URL parsing, "getting errors" is heavily guessed as a Digital Service outage rather than a generic inquiry.
+At first glance, 64% accuracy doesn't sound groundbreaking, but it is actually highly **under-reported (pessimistic)**. 
 
-3. **High-Emotion Rants Masking the Issue**
-   * *Real Example*: `@AmazonHelp A GENUINE COMPANY ONCE IS SURE THAT PRODUCT IS FAKE... AMAZON INSTEAD HARASSES ITS CUSTOMERS...`
-   * *Actual*: Product/Item Defect | *Predicted*: Other/General Inquiry
-   * *Hypothesis*: The customer focuses entirely on the "fraud/harassment" aspect rather than the actual defective product. The LLM classifies it as a general complaint.
+Because I bootstrapped my Golden Dataset using an LLM, the "ground-truth" labels contain inherent noise. Often, my RAG-enhanced agent makes a highly intelligent prediction (e.g., classifying a tweet as a "Returns" issue), but because the noisy ground-truth labeled it as "Account Issue", the evaluation harness aggressively penalizes it as a failure.
 
-4. **Missing Context / Thread Continuation**
-   * *Real Example*: `@AmazonHelp which correspondence e-mail ?????? send me the link again`
-   * *Actual*: Account/Billing Issue | *Predicted*: Other/General Inquiry
-   * *Hypothesis*: Because our agent is stateless and only evaluates the single latest tweet, it lacks the history to know this relates to a billing email.
+Conversely, the 3.42/5 Reply Score is likely slightly **optimistic**. Using an LLM to judge another LLM introduces a positive bias; the judge tends to prefer its own lengthy, highly-structured writing style over the blunt brevity of human Amazon agents. 
 
-5. **Multi-lingual / Non-English Inputs**
-   * *Real Example*: `@AmazonHelp O contacte t'on le sav ?`
-   * *Actual*: Returns/Refunds | *Predicted*: Other/General Inquiry
-   * *Hypothesis*: The prompt and intent definitions are in English. The model defaults to "Other" when it encounters French.
+---
 
-## 6. What is misleading about my headline number?
-The 64% Intent Accuracy is actually *pessimistic* (under-reported). Because the Golden Dataset was heavily bootstrapped by a zero-shot LLM, the ground-truth labels contain noise. When our RAG-enhanced agent predicts something different, it is often penalized as "incorrect", even when its prediction is arguably better than the noisy ground-truth. Conversely, the 3.42/5 Reply Score is slightly *optimistic* because the LLM-as-judge inherently prefers its own lengthy, highly-structured writing style over the short, human-written actual replies.
+## 6. Failure Analysis (My Top 5 Failure Modes)
+
+I dug into the evaluation logs to find exactly where the model fell on its face. Here are 5 real examples:
+
+**1. Conflicting/Intersecting Intents**
+* **Tweet:** `@AmazonHelp I think Amazon gine mad ...product worth 1750 and delivery charge 1000 ....plz remove delivery charge`
+* **Actual:** Account/Billing Issue | **Predicted:** Delivery/Shipping Issue
+* *My Hypothesis:* The presence of the phrase "delivery charge" traps the LLM. It over-indexes on the word "delivery" and completely ignores the financial core of the complaint.
+
+**2. Vague / Link-only Tweets**
+* **Tweet:** `@AmazonHelp Getting errora https://t.co/qLxnCgRP0A`
+* **Actual:** Other/General Inquiry | **Predicted:** Digital Services (Video/Kindle)
+* *My Hypothesis:* Because the agent lacks vision capabilities or URL parsing, "getting errors" is wildly guessed as a digital outage rather than a generic inquiry requiring clarification.
+
+**3. High-Emotion Rants Masking the Issue**
+* **Tweet:** `@AmazonHelp A GENUINE COMPANY ONCE IS SURE THAT PRODUCT IS FAKE... AMAZON INSTEAD HARASSES ITS CUSTOMERS...`
+* **Actual:** Product/Item Defect | **Predicted:** Other/General Inquiry
+* *My Hypothesis:* The customer is so angry about the "harassment" that the actual issue (a fake/defective product) gets buried. The LLM gets overwhelmed by the emotion and defaults to a general complaint.
+
+**4. Missing Context / Thread Continuation**
+* **Tweet:** `@AmazonHelp which correspondence e-mail ?????? send me the link again`
+* **Actual:** Account/Billing Issue | **Predicted:** Other/General Inquiry
+* *My Hypothesis:* Because my agent evaluates tweets in isolation, it lacks the historical context of the thread to know that this specific tweet relates to a billing email.
+
+**5. Multi-lingual / Non-English Inputs**
+* **Tweet:** `@AmazonHelp O contacte t'on le sav ?`
+* **Actual:** Returns/Refunds | **Predicted:** Other/General Inquiry
+* *My Hypothesis:* My intent definitions are strictly in English. When the model encounters French, it panics and dumps the tweet into the "Other" bucket.
+
+---
 
 ## 7. What I'd do next with one more week
-1. **Multi-Turn Context Window**: Pass the last 3-5 tweets in the conversation to the agent so it can handle follow-up questions (like Failure Mode #4).
-2. **Dense RAG Vector DB**: Move from in-memory arrays to a proper FAISS or ChromaDB store, allowing us to embed 500,000 historical tweets instead of just 5,000, severely boosting RAG quality.
-3. **Dedicated Escalation Classifier**: Split the prompt into two separate LLM calls. One purely for classification (using a strict JSON output model), and one for drafting. Combining them dilutes the LLM's attention.
+
+If I had another week to push this to production, I would focus on:
+1. **Multi-Turn Context Windows:** I'd rewrite the data pipeline to pass the last 3-5 tweets of a thread to the agent. This would instantly fix Failure Mode #4.
+2. **Dedicated Escalation Classifier:** Right now, the LLM classifies intent, drafts a reply, and evaluates escalation all in one massive prompt. I would split this into two separate API calls to prevent the LLM from diluting its attention.
+3. **Move to a Real Vector DB:** I'd replace the in-memory array with ChromaDB, allowing me to embed all 500,000 historical Amazon tweets instead of a 5,000-row subsample, making the RAG infinitely smarter.
+
+---
 
 ## 8. Decision Log
-1. **Brand Choice**: Chose `AmazonHelp` because it is the most voluminous and heavily represented brand in the dataset, ensuring a rich historical RAG database.
-2. **Dataset Subsampling**: Extracted 168k turn-pairs, but sampled down to 5,000 for the RAG index to ensure the pipeline runs locally in under 15 minutes.
-3. **Intent Taxonomy**: Defined 6 distinct intents rather than 20+ to keep the classification task bounded and measurable for a prototype.
-4. **Bootstrapping the Golden Set**: Used an LLM to pre-label the 200 Golden Set examples. Hand-labeling from scratch would bottleneck development; reviewing pre-labels is faster.
-5. **RAG vs. Fine-Tuning**: Chose RAG over Fine-Tuning to allow real-time policy updates (just swap the database) without expensive retraining.
-6. **SentenceTransformers over TF-IDF**: Originally tried TF-IDF, but switched to `all-MiniLM-L6-v2` because dense embeddings capture semantic meaning (e.g., matching "broken" to "defect") vastly outperforming keyword matching.
-7. **Stateless Agent**: Ignored multi-turn memory to simplify the architecture, treating each tweet as an isolated ticket.
-8. **LLM Choice**: Selected `Qwen-27B` via Groq for its extreme speed and massive context window, avoiding OpenAI API costs for the reviewer.
-9. **Single-Prompt Architecture**: Combined classification, drafting, and escalation into one JSON prompt to save API calls and reduce latency.
-10. **LLM-as-Judge Evaluation**: Built an automated evaluator because manually scoring 50 generated replies on every code iteration is impossible.
-11. **Escalation Rules**: Hardcoded rule definitions in the prompt (e.g., "Escalate ONLY if threatening") rather than letting the LLM guess what warrants an escalation.
-12. **Discarding Automated Tweets**: Chose to keep all tweets (even "Please DM us" bots) in the RAG database because it accurately reflects Amazon's real-world mitigation strategy.
+
+Here is a plain list of the non-obvious decisions I made while building this:
+
+* **Chose AmazonHelp:** I picked this over AppleSupport because Amazon deals with a wilder variety of physical logistics issues, making the classification task more challenging and interesting.
+* **Bootstrapped the Golden Set:** I used an LLM to pre-label the 200 Golden Set examples. Hand-labeling from scratch would have bottlenecked my development time; reviewing and correcting pre-labels was vastly more efficient.
+* **Switched from TF-IDF to Dense Embeddings:** I originally built the RAG using TF-IDF for speed, but quickly realized keyword matching is terrible for customer support (e.g. matching "broken" to "defective"). I swallowed the dependency cost of `sentence-transformers` for a massive leap in semantic quality.
+* **RAG over Fine-Tuning:** I chose RAG because support policies change daily. With RAG, you just swap the database. Fine-tuning would require expensive retraining every time a shipping policy changes.
+* **Ignored Multi-turn Memory:** I opted for a stateless architecture to simplify the mental model of the prototype, treating each tweet as an isolated support ticket.
+* **Used Groq (Qwen-27B):** I bypassed OpenAI in favor of Groq to ensure the pipeline runs with near-zero latency, which is critical for real-time twitter bots.
+* **Single-Prompt JSON Architecture:** I forced the LLM to output Intent, Escalation, and the Draft in one strict JSON payload to minimize API calls and latency.
+* **Hardcoded Escalation Rules:** Instead of letting the LLM vibe-check what an escalation is, I hardcoded strict boolean-like rules in the prompt (e.g., "Escalate ONLY if threatening").
+* **Kept Bot Responses in the DB:** I didn't filter out automated "Please DM us" responses from the historical data, because that accurately reflects Amazon's real-world mitigation strategy.
+* **Standalone Evaluation Harness:** I completely decoupled `eval.py` from `agent.py` so that someone could benchmark new models or prompts without risking breaking the core agent pipeline.
+* **Sub-sampled the RAG index:** I limited the RAG database to 5,000 rows. I could have done more, but I wanted to strictly honor the requirement that the reviewer could run this from scratch in under 15 minutes.
+* **No Dialogue Manager:** I avoided tools like LangChain or AutoGen. They add unnecessary bloat for a single-turn triage task, and building it from scratch makes the codebase infinitely easier to debug.
