@@ -42,6 +42,17 @@ I decided early on *not* to build a complex, multi-turn state machine or dialogu
 
 ## 3. The Golden Evaluation Set
 
+### Data Pipeline Flow
+`mermaid
+flowchart LR
+    A[(Raw Kaggle Dataset <br> 3M Tweets)] -->|Filter| B(AmazonHelp Tweets)
+    B -->|Self-Join on Tweet IDs| C[Customer-Agent Pairs]
+    C -->|Sample 5,000| D[(RAG Vector Store)]
+    C -->|Sample 200| E[Raw Golden Set]
+    E -->|LLM Pre-labeling + <br> Manual Review| F[Golden Evaluation Set]
+`
+
+
 To prove this actually works, I needed a ground-truth dataset. 
 
 **Sampling:** I randomly pulled 200 customer-agent interaction pairs from the filtered `AmazonHelp` dataset to ensure I wasn't just testing on easy "Where is my package?" queries.
@@ -50,6 +61,23 @@ To prove this actually works, I needed a ground-truth dataset.
 ---
 
 ## 4. Results vs. Baselines
+
+### Evaluation Harness Flow
+`mermaid
+sequenceDiagram
+    participant Dataset as Golden Set
+    participant Agent as AI Agent
+    participant Judge as LLM Judge
+    
+    Dataset->>Agent: 1. Send Customer Tweet
+    Agent-->>Agent: 2. Retrieve context & Draft Reply
+    Agent->>Dataset: 3. Output Predicted Intent & Escalation
+    
+    Dataset->>Judge: 4. Send Draft Reply & Actual Historical Reply
+    Judge-->>Judge: 5. Compare Helpfulness & Tone
+    Judge->>Dataset: 6. Output Score (1-5)
+`
+
 
 To evaluate the agent, I built `eval.py`, which uses an LLM-as-judge to score the draft replies (1-5) against the actual historical reply on helpfulness and tone. *(Note: To verify my judge wasn't hallucinating, I manually scored 15 outputs myself. The LLM-judge matched my exact score 73% of the time, and was within 1 point 100% of the time).*
 
