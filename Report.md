@@ -11,23 +11,17 @@ Here is a breakdown of my thought process, how I built the agent, and what I lea
 
 Before diving into the metrics, here is a high-level look at the pipeline I built to solve this. I kept the architecture as lightweight as possible so it could run locally in under 15 minutes, using local dense embeddings instead of spinning up a heavy vector database.
 
-```mermaid
-graph TD
-    A[Incoming Customer Tweet] --> B[AmazonSupportAgent]
-    
-    subgraph RAG Grounding Pipeline
-        B -->|Customer Text| C[SentenceTransformers <br> all-MiniLM-L6-v2]
-        C -->|Dense Vector| D[(Historical Resolutions DB)]
-        D -->|Top 3 Similar Cases| E[Context & Prompt Builder]
-    end
-    
-    E --> F[Groq LLM API <br> Qwen-27B]
-    F -->|Strict JSON Output| G{JSON Parser}
-    
-    G -->|Intent Category| H[Intent Classifier]
-    G -->|Escalate: Yes/No| I[Escalation Router]
-    G -->|Text Draft| J[Grounded Reply Drafter]
-```
+**High-Level Flow:**
+1. **Input:** Incoming Customer Tweet is received by the Agent.
+2. **RAG Grounding:** The text is embedded using SentenceTransformers. We query our historical vector database to find the top 3 most similar past cases.
+3. **Prompting:** The customer tweet and the historical cases are passed to the Groq LLM (Qwen-27B).
+4. **Output:** The LLM outputs a strict JSON payload containing:
+   - The classified Intent
+   - The Escalation decision (Yes/No)
+   - The drafted reply.
+
+
+````
 
 ---
 
@@ -42,17 +36,17 @@ I decided right away to skip building a complex, multi-turn dialogue manager. In
 
 ## 3. The Golden Evaluation Set
 
-To prove this actually works, I needed a ground-truth dataset. 
+To prove this actually works, I needed a ground-truth dataset.
+
+**Pipeline Steps:**
+- **Raw Data:** 3 Million Tweets from Kaggle
+- **Filter:** Isolate only @AmazonHelp interactions
+- **Transform:** Self-join on Tweet IDs to create Customer-Agent turn pairs.
+- **Split:** Sample 5,000 for the RAG Vector Store, and 200 for the Golden Evaluation Set.
+
 
 ### Data Pipeline Flow
-```mermaid
-flowchart LR
-    A[(Raw Kaggle Dataset <br> 3M Tweets)] -->|Filter| B(AmazonHelp Tweets)
-    B -->|Self-Join on Tweet IDs| C[Customer-Agent Pairs]
-    C -->|Sample 5,000| D[(RAG Vector Store)]
-    C -->|Sample 200| E[Raw Golden Set]
-    E -->|LLM Pre-labeling + <br> Manual Review| F[Golden Evaluation Set]
-```
+````
 
 **Sampling:** I randomly grabbed 200 customer-agent interactions from the filtered dataset so I wouldn't just end up testing on easy "Where is my package?" tweets.
 **Labeling:** Hand-labeling 200 rows manually sounded awful, so I cheated a little bit. I wrote a script to have an LLM pre-label the 200 samples with an Intent, an Escalation flag, and a Reason. I then went in and manually reviewed the CSV. This let me quickly fix rows where the AI missed the sarcasm or subtle context (for example, re-classifying a seemingly polite but legally threatening tweet into "Escalate: Yes").
@@ -64,20 +58,7 @@ flowchart LR
 To evaluate the agent, I built `eval.py`.
 
 ### Evaluation Harness Flow
-```mermaid
-sequenceDiagram
-    participant Dataset as Golden Set
-    participant Agent as AI Agent
-    participant Judge as LLM Judge
-    
-    Dataset->>Agent: 1. Send Customer Tweet
-    Agent-->>Agent: 2. Retrieve context & Draft Reply
-    Agent->>Dataset: 3. Output Predicted Intent & Escalation
-    
-    Dataset->>Judge: 4. Send Draft Reply & Actual Historical Reply
-    Judge-->>Judge: 5. Compare Helpfulness & Tone
-    Judge->>Dataset: 6. Output Score (1-5)
-```
+````
 
 My `eval.py` script uses an LLM-as-judge to score the draft replies (1-5) against the actual historical reply on helpfulness and tone. *(Note: To verify my judge wasn't hallucinating, I manually scored 15 outputs myself. The LLM-judge matched my exact score 73% of the time, and was within 1 point 100% of the time).*
 
