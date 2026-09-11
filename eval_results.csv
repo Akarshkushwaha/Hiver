@@ -1,0 +1,58 @@
+customer_text,actual_intent,pred_intent,intent_match,actual_escalate,pred_escalate,escalate_match,reply_score
+"@115821 WHAT’S THE POINT OF PRIME IF YOU CAN’T GET IT HERE ON TIME?!
+
+This is a pair of shoelaces for Christ’s sake!
+
+What’s the deal @115821?? https://t.co/WWuHlII8Lk",Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,2
+"@AmazonHelp I talked to all three delivery agents, they said that Amazon don't deliver to office addresses on Saturdays and Sundays. I wonder, if it's so, then why delivery is told to be confirmed om Saturday, when selected address is office address?",Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,2
+#apptreasurehunt @115850 I have just received my Safari that I won during last App Treasure Hunt.It's pretty👌I❤it. Thanks Amazon🙏❤Amazon,Other/General Inquiry,Other/General Inquiry,True,No,No,True,3
+"@AmazonHelp I see, quite confusing for international viewers, but I'll pay attention frm now on. Already wrote to the customer service directly, thanks!",Other/General Inquiry,Other/General Inquiry,True,No,No,True,5
+@AmazonHelp No reply from you. And I have messaged your seller too.,Other/General Inquiry,Other/General Inquiry,True,No,No,True,4
+@AmazonHelp Mais c’est juste pas normal. Je paye la livraison et mon colis reste bloqué une semaine sans raison à côté de chez moi.,Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,4
+"@AmazonHelp I have no idea, how is a customer expected to know who you use for each order?",Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,4
+"@AmazonHelp 
+@115850 
+I think Amazon gine mad ...product worth 1750 and delivery charge 1000 ....plz remove delivery charge i want this https://t.co/39YvwAcHll",Account/Billing Issue,Delivery/Shipping Issue,False,No,No,True,1
+@AmazonHelp The entire intent of tweeting again was the issue is unresolved even after receiving the correspondence concluding that your team is hopeles,Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,5
+"@AmazonHelp J'y penserai, j'y penserai 😉@AmazonHelp Toujours là pour nous aider de ""A à Z"" 🙃😉",Other/General Inquiry,Other/General Inquiry,True,No,No,True,2
+I ordrd som prdcts and it delivrd on 16th Oct. Due to prodct damage  rtrned but. :(  Tis ia haw amzn harasing  cstmrs. @115821,Returns/Refunds,Returns/Refunds,True,No,No,True,3
+@AmazonHelp So what do I do till 30th October - the date when echo is expected to be dispatched? Last year's prime expired yesterday.,Account/Billing Issue,Account/Billing Issue,True,No,No,True,4
+@AmazonHelp Getting errora https://t.co/qLxnCgRP0A,Other/General Inquiry,Digital Services (Video/Kindle),False,No,No,True,4
+@AmazonHelp Is this a unit price or the order value. At the time of Medical emergency do u think it is good to charge these charges? U should sometimes leave profit as moto,Account/Billing Issue,Account/Billing Issue,True,No,No,True,4
+Accidentally shipped my amazon order to @71609 and they claim they don’t have it...but uh..? I messed up with shipping but somebody did something incorrect. Somewhere. USPS doesn’t mark things as delivered if they weren’t. https://t.co/HKGaCgM6Fe,Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,4
+"@115821 @6954 @1404 @AmazonHelp @115850 A GENUINE COMPANY ONCE IS SURE THAT PRODUCT IS FAKE, WOULD HV ASKD ITS  SUPLIERS TO REPLACE IT IMMEDIATELY &amp; WOULD HV SUSPENDED HIM. HOWEVER  AMAZON INSTEAD HARASSES ITS CUSTOMERS THEREBY SUPPORTING ITS   FRAUD  SUPPLIERS AS IT IS INVOLVED IN IT",Product/Item Defect,Other/General Inquiry,False,Yes,No,False,3
+@AmazonHelp which correspondence e-mail  ?????? send me the link again,Account/Billing Issue,Other/General Inquiry,False,No,No,True,4
+@117086 Café. Sempre. 💗,Other/General Inquiry,Other/General Inquiry,True,No,No,True,3
+"@115850 Courier Amazon Transportation Services
+Tracking # 210166419480 haven't received the product. U spoiled my festival worst service",Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,1
+"@AmazonHelp The carrier is canada post. People I talked to on the phone did not seem to have the same info I did. I got TWO emails today saying there was trouble delivering my package, even though I have even given an alternative address for delivery.",Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,3
+@AmazonHelp Confirmation email said Wednesday but the email saying it was dispatched says Thursday,Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,2
+@AmazonHelp dont need assistance when you dont have ethics @1145 what law &amp; policy if Goods are overprice than MRP  @118341,Other/General Inquiry,Other/General Inquiry,True,No,No,True,2
+@AmazonHelp I want that item and had specifically asked for the item to be resent and now I am told I have to order the item again and the refund is being processed and will take 2-4 days. I don't even have a number to call and complain.,Returns/Refunds,Returns/Refunds,True,No,No,True,4
+@AmazonHelp Où contacte t'on le sav ?,Returns/Refunds,Other/General Inquiry,False,No,No,True,4
+@115821 Please update customer care data I m nt able place customer call service bcz if ur nt able find my order😡😡 https://t.co/UvzJ0Vjd18,Account/Billing Issue,Other/General Inquiry,False,No,No,True,1
+Ima start buying three packs of water instead of two. Be RUNNING through it. I wish i could buy a pack of aquafina in the 1 liter bottles. @115821 do you have this?,Other/General Inquiry,Other/General Inquiry,True,No,No,True,4
+@AmazonHelp I received a notification on one of my orders stating that it was in my town's distribution centre and now it is gone and the delivery date has changed from today to either the 6th of December or the 7th. What is going on? https://t.co/k7nkycXjOj,Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,4
+以前amazonプライム会員無料の時にお試しで入ったやつがずっと継続で引き落としされてた,Account/Billing Issue,Account/Billing Issue,True,No,No,True,4
+"@AmazonHelp si, ya he abierto una reclamación por telefono",Returns/Refunds,Other/General Inquiry,False,No,No,True,4
+"@AmazonHelp Me puedes explicar qué significa el reemplazo,  por favor.  No quiero el reembolso. Por otro lado, ¿cuando me va a llegar? Gracias",Returns/Refunds,Returns/Refunds,True,No,No,True,4
+Didn't expect so poor response from @115850 1st they delivered faulty #iPhone6S nd now not responding my complaint. #fraudcompany @131027 https://t.co/LFa59a5n0n,Product/Item Defect,Product/Item Defect,True,Yes,No,False,4
+Insupportable d’attendre un colis @8200 pendant 25 jours quand tu es abonné @120533 #durdur,Delivery/Shipping Issue,Delivery/Shipping Issue,True,No,No,True,4
+"Sempre ouvi falar bem da @117086 mas depois dessa, mano... Eu não quero me envolver mais com ela",Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,2
+@AmazonHelp It does say the expected delivery is now 11/24-11/28. Frustrating considering that wasn’t updated until after the original delivery date had passed,Other/General Inquiry,Delivery/Shipping Issue,False,Yes,No,False,4
+"@52379 Hi, I ordered a gold hanging file organizer months ago on @115821 and there is no shipping date forthcoming. Are you going to make more of them so my office can shine?",Other/General Inquiry,Delivery/Shipping Issue,False,Yes,No,False,4
+@AmazonHelp スマホからの登録は可能ですか？,Other/General Inquiry,Account/Billing Issue,False,Yes,No,False,5
+@AmazonHelp  https://t.co/aL4g20CsRI,Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,2
+@AmazonHelp my order keeps saying my order payment is a problem then I fix it then it pops up again I even did one day shipping on Sunday and it still hasn’t shipped!,Other/General Inquiry,Account/Billing Issue,False,Yes,No,False,5
+@AmazonHelp Plz update,Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,4
+@AmazonHelp No,Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,1
+@AmazonHelp What is the use of having Prime access when the promise delivery date is extended by 2 days.,Other/General Inquiry,Delivery/Shipping Issue,False,Yes,No,False,2
+@AmazonHelp I need to know about Kindle KDP.,Other/General Inquiry,Digital Services (Video/Kindle),False,Yes,No,False,5
+@AmazonHelp I have a subscription free trial. I want to cancel it before billed but it won’t show up in my subscriptions. How do I cancel it,Other/General Inquiry,Account/Billing Issue,False,Yes,No,False,4
+Didn't expect such goofups and loose attitude after sale from a giant like #Amazon @AmazonHelp @115850 @115821,Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,5
+@AmazonHelp tal vez no entendieron mi inglés??? Se como sea la orden tardo 2 días y el reembolso que se me prometio nunca llego tampoco. 48hrs?? Ya van 72hrs y nada no mientan a los clientes,Other/General Inquiry,Returns/Refunds,False,Yes,No,False,3
+@120533 vraiment vous abusez plus d’une semaine pour livrer des écouteurs ptn jvais faire comment lundi,Other/General Inquiry,Delivery/Shipping Issue,False,Yes,No,False,4
+@amazonhelp C'était pour aujourd'hui ou hier à la base (quand j'ai commandé),Other/General Inquiry,Delivery/Shipping Issue,False,Yes,No,False,4
+@AmazonHelp não posso devolver pois não comprei as pilhas pelo site e sim o produto com uma descrição errada que me prejudicou.,Other/General Inquiry,Returns/Refunds,False,Yes,No,False,5
+"@AmazonHelp Bonjour ! Non pas encore je pensais me renseigner auprès de mes voisins d'abord, comme j'y suis depuis peu je ne connais pas ts le monde 😅",Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,3
+@706429 @116316 @AmazonHelp @116316  Could you please clear this ?,Other/General Inquiry,Other/General Inquiry,True,Yes,No,False,3
